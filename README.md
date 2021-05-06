@@ -19,5 +19,5 @@ The real value of this is deploying it to kubernetes as a cronjob and then looki
 The phone numbers to text as well as the twilio api key are obscured as secrets.  Set them as environment variables for local testing:
 
 ```shell
-TWILIO_AUTH=api-key PHONE_NUMBERS=+16666666666,+16666666666 go run
+TWILIO_AUTH=api-key PHONE_NUMBERS=+16666666666,+16666666666 go run .
 ```
