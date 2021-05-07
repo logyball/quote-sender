@@ -1,0 +1,8 @@
+---
+bases:
+  - ../../base
+nameSuffix: "-dev"
+namespace: "quotes-dev"
+patches:
+  - phoneSecret.yml
+  - twilioAuthSecret.yml
