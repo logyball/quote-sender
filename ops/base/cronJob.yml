@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: quote-messanger
-              image: loganballard/quote-msg-arm:0.0.7
+              image: loganballard/quote-msg-arm:prod
               command: ["/dist/quoteCats"]
               env:
                 - name: TWILIO_AUTH

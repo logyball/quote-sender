@@ -11,6 +11,7 @@ spec:
         spec:
           containers:
             - name: quote-messanger
+              image: loganballard/quote-msg-arm:dev
               env:
               - name: TWILIO_AUTH
                 valueFrom:
