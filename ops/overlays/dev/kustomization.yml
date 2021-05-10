@@ -1,9 +1,10 @@
----
-bases:
-  - ../../base
-nameSuffix: "-dev"
-namespace: "quotes-dev"
-patches:
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+nameSuffix: -dev
+namespace: quotes-dev
+patchesStrategicMerge:
   - phoneSecret.yml
   - twilioAuthSecret.yml
   - cronJob.yml
+bases:
+  - ../../base

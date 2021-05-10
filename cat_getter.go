@@ -15,6 +15,7 @@ type CatObject struct {
 	Url string `json: url`
 }
 
+// downloadFile rips a file straight from the internet onto the local filesystem
 func downloadFile(filepath string, url string) error {
 	log.Infof("downloading %v", url)
 	resp, err := http.Get(url)
@@ -57,8 +58,9 @@ func parseCatJsonResponse(responseBody []byte) string {
 }
 
 // GetCatFromApi returns a URL with a random cat pic
+// It must be <5mb, and will retry 5 times to get a cat
 func GetCatFromApi() string {
-	for {
+	for i := 0; i < 5; i++ {
 		log.Info("getting cat from api")
 		resp, err := http.Get(catApiUrl)
 		defer resp.Body.Close()
@@ -79,4 +81,6 @@ func GetCatFromApi() string {
 		}
 		log.Infof("cat %v was too large :(, trying again", url)
 	}
+	log.Fatalf("Couldn't find a suitable cat in 5 tries :(, quitting with error")
+	return ""
 }
