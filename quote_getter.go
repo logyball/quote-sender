@@ -23,7 +23,7 @@ type QuoteResponse struct {
 const quoteApiUrl string = "http://quotes.rest/qod?category=inspire&language=en"
 
 
-func parseJsonResp(responseBody []byte) *QuoteObject {
+func parseQuoteJsonResponse(responseBody []byte) *QuoteObject {
 	var val QuoteResponse
 	jsonErr := json.Unmarshal(responseBody, &val)
 
@@ -48,5 +48,5 @@ func GetQuoteFromApi() *QuoteObject {
 	if readErr != nil {
 		log.Fatal(readErr)
 	}
-	return parseJsonResp(body)
+	return parseQuoteJsonResponse(body)
 }

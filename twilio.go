@@ -58,17 +58,18 @@ func buildTextString(quotes *QuoteObject) string {
 	return fmt.Sprintf("\"%v\"\n\n-%v", quotes.Quote, quotes.Author)
 }
 
-func buildTwilioMsgData(quote *QuoteObject, numberTo string) *strings.Reader {
+func buildTwilioMsgData(quote *QuoteObject, catUrl string, numberTo string) *strings.Reader {
 	msgString := buildTextString(quote)
 	msgData := url.Values{}
 	msgData.Set("To", numberTo)
 	msgData.Set("From", TwilioNumberFrom)
 	msgData.Set("Body", msgString)
+	msgData.Set("MediaUrl", catUrl)
 	return strings.NewReader(msgData.Encode())
 }
 
-func buildTwilioMessage(quote *QuoteObject, numberTo string) http.Request {
-	msgDataReader := buildTwilioMsgData(quote, numberTo)
+func buildTwilioMessage(quote *QuoteObject, catUrl string, numberTo string) http.Request {
+	msgDataReader := buildTwilioMsgData(quote, catUrl, numberTo)
 	req, err := http.NewRequest("POST", TwilioUrl, msgDataReader)
 	if err != nil {
 		log.Fatal(err)
@@ -83,8 +84,8 @@ func buildTwilioMessage(quote *QuoteObject, numberTo string) http.Request {
 	return *req
 }
 
-func SendQuoteMessage(quote *QuoteObject, numberTo string) error {
-	msgReq := buildTwilioMessage(quote, numberTo)
+func SendMessage(quote *QuoteObject, catUrl string, numberTo string) error {
+	msgReq := buildTwilioMessage(quote, catUrl, numberTo)
 	client := &http.Client{}
 
 	log.Printf("Sending Request to Twilio API: %v\n", msgReq)

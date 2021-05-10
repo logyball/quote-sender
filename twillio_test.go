@@ -12,8 +12,9 @@ func TestBuildTwilioMessage(t *testing.T) {
 		Quote:  "quote",
 		Author: "author",
 	}
+	catUrl := "www.google.com"
 	numberTo := "12345"
-	req := buildTwilioMessage(&testQuoteObj, numberTo)
+	req := buildTwilioMessage(&testQuoteObj, catUrl, numberTo)
 
 	assert.Equal(t, "https://api.twilio.com/2010-04-01/Accounts/AC785587cdbdd787fd35de9c2440f6ec26/Messages.json", req.URL.String())
 	assert.Contains(t, req.Header.Get("Accept"), "application/json")
@@ -40,4 +41,25 @@ func TestGetPhoneNumbersFromEnv(t *testing.T) {
 	assert.Contains(t, numbersToText, "+16666666666")
 	assert.NotContains(t, numbersToText, "+166666666667")
 	_ = os.Unsetenv("PHONE_NUMBERS")
+}
+
+
+func TestGetTwilioAuthErrorWhenEnvNotPresent(t *testing.T) {
+	_ = os.Unsetenv("TWILIO_AUTH")
+	_, err := getTwilioAuth()
+	assert.Error(t, err)
+}
+
+func TestGetTwilioAuthFromEnv(t *testing.T) {
+	os.Clearenv()
+	err := os.Setenv("TWILIO_AUTH", "Not_Null")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	auth, err := getTwilioAuth()
+
+	assert.Nil(t, err)
+	assert.Equal(t, "Not_Null", auth)
+	_ = os.Unsetenv("TWILIO_AUTH")
 }
