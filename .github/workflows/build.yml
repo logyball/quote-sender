@@ -44,7 +44,7 @@ jobs:
 
       - name: semver bump
         id: semver_bump
-        uses: zwaldowski/semver-release-action@v1
+        uses: zwaldowski/semver-release-action@v2
         with:
           prefix: v
           bump: patch
