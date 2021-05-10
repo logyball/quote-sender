@@ -4,7 +4,7 @@ This is a dumb program that uses golang to fetch the quote of the day from `http
 
 Starting in v2, I've add the [CatAPI](https://thecatapi.com/) as bonus picture inside the message.
 
-![Example Message](imgs/example_message.jpeg "Example Message")
+<img src="./imgs/example_message.jpeg" width="360" height="640" alt="Example Message"/>
 
 ### Building
 
