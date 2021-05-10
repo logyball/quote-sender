@@ -3,9 +3,15 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**/*.md'
+      - 'imgs/**'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '**/*.md'
+      - 'imgs/**'
 jobs:
   build:
     runs-on: ubuntu-latest
