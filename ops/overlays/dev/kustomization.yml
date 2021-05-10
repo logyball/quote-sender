@@ -6,3 +6,4 @@ namespace: "quotes-dev"
 patches:
   - phoneSecret.yml
   - twilioAuthSecret.yml
+  - cronJob.yml

@@ -4,14 +4,14 @@ metadata:
   name: quote-messenger
   namespace: quotes
 spec:
-  schedule: "0 8 * * *"
+  schedule: "30 7 * * *"
   jobTemplate:
     spec:
       template:
         spec:
           containers:
             - name: quote-messanger
-              image: loganballard/quote-msg-arm:0.0.6
+              image: loganballard/quote-msg-arm:0.0.7
               command: ["/dist/quoteCats"]
               env:
                 - name: TWILIO_AUTH
