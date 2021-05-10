@@ -17,12 +17,14 @@ var LastSuccess = prometheus.NewGauge(prometheus.GaugeOpts{
 
 func main() {
 	quote := GetQuoteFromApi()
+	catUrl := GetCatFromApi()
+	log.Print(catUrl)
 	numbersToText, err := getNumbersToText()
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, phoneNumber := range numbersToText {
-		err := SendQuoteMessage(quote, phoneNumber)
+		err := SendMessage(quote, catUrl, phoneNumber)
 		if err != nil {
 			log.Fatal(err)
 		}
