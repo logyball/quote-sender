@@ -18,7 +18,6 @@ var LastSuccess = prometheus.NewGauge(prometheus.GaugeOpts{
 func main() {
 	quote := GetQuoteFromApi()
 	catUrl := GetCatFromApi()
-	log.Print(catUrl)
 	numbersToText, err := getNumbersToText()
 	if err != nil {
 		log.Fatal(err)

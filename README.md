@@ -1,4 +1,4 @@
-# Quote Messager
+# Quote and Cat Messenger
 
 This is a dumb program that uses golang to fetch the quote of the day from `http://quote.rest/` and then uses twilio to send it to my phone.  The real value of it is that it's a simple thing that can be served up via k8s in a cronjob.
 
