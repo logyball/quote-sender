@@ -41,3 +41,28 @@ The phone numbers to text as well as the twilio api key are obscured as secrets.
 ```shell
 TWILIO_AUTH=api-key PHONE_NUMBERS=+16666666666,+16666666666 go run .
 ```
+
+### Adding New Phone Numbers
+
+Using `kubeseal` and SealedSecrets, you can add new phone numbers:
+
+```bash
+$ kubectl create secret generic phone-numbers -n quotes --from-literal=numbers=+15555555555,+16666666666 --dry-run=client -o yaml | kubeseal --format=yaml -
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  creationTimestamp: null
+  name: phone-numbers
+  namespace: quotes
+spec:
+  encryptedData:
+    numbers: 
+    <gibberish>
+  template:
+    metadata:
+      creationTimestamp: null
+      name: phone-numbers
+      namespace: quotes
+```
+
+Then apply that to your cluster.
