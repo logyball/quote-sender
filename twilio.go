@@ -3,13 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const TwilioNumberFrom string = "+15033005651"
@@ -88,7 +89,7 @@ func SendMessage(quote *QuoteObject, catUrl string, numberTo string) error {
 	msgReq := buildTwilioMessage(quote, catUrl, numberTo)
 	client := &http.Client{}
 
-	log.Printf("Sending Request to Twilio API: %v\n", msgReq)
+	log.Printf("Sending Request to %s via Twilio API: %v\n", numberTo, msgReq)
 	resp, err := client.Do(&msgReq)
 	if err != nil {
 		log.Fatal(err)
@@ -102,4 +103,3 @@ func SendMessage(quote *QuoteObject, catUrl string, numberTo string) error {
 	log.Printf("Twilio API Response: %v", string(respBody))
 	return nil
 }
-
