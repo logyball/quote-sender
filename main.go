@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 
@@ -16,14 +18,15 @@ var LastSuccess = prometheus.NewGauge(prometheus.GaugeOpts{
 })
 
 func main() {
+	isItDogFridayBabeee := time.Now().Weekday().String() == "Friday"
 	quote := GetQuoteFromApi()
-	catUrl := GetCatFromApi()
+	animalUrl := GetAnimalFromApi(isItDogFridayBabeee)
 	numbersToText, err := getNumbersToText()
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, phoneNumber := range numbersToText {
-		err := SendMessage(quote, catUrl, phoneNumber)
+		err := SendMessage(quote, animalUrl, phoneNumber)
 		if err != nil {
 			log.Fatal(err)
 		}
