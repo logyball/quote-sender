@@ -28,8 +28,8 @@ type CatObject struct {
 }
 
 type DogObject struct {
-	Url    string `json: message`
-	status string `json: status`
+	Message string
+	Status  string
 }
 
 // downloadFile rips a file straight from the internet onto the local filesystem
@@ -88,6 +88,7 @@ func isFileTypeAllowed(url string) bool {
 	fileExtension := filepathSplit[1]
 	for _, filetype := range allowedFileTypes {
 		if fileExtension == filetype {
+			log.Infof("Filetype was allowed for %v", url)
 			return true
 		}
 	}
@@ -105,12 +106,12 @@ func parseCatJsonResponse(responseBody []byte) string {
 }
 
 func parseDogJsonResponse(responseBody []byte) string {
-	var val []DogObject
+	var val DogObject
 	err := json.Unmarshal(responseBody, &val)
-	if err != nil || val[0].status != "success" {
+	if err != nil || val.Status != "success" {
 		log.Fatal(err)
 	}
-	return val[0].Url
+	return val.Message
 }
 
 // GetAnimalFromApi returns a URL with a random cat pic
