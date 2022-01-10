@@ -2,13 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type QuoteObject struct {
-	Quote string `json: quote`
+	Quote  string `json: quote`
 	Author string `json: author`
 }
 
@@ -22,7 +24,6 @@ type QuoteResponse struct {
 
 const quoteApiUrl string = "http://quotes.rest/qod?category=inspire&language=en"
 
-
 func parseQuoteJsonResponse(responseBody []byte) *QuoteObject {
 	var val QuoteResponse
 	jsonErr := json.Unmarshal(responseBody, &val)
@@ -33,9 +34,13 @@ func parseQuoteJsonResponse(responseBody []byte) *QuoteObject {
 	return &val.Contents.Quotes[0]
 }
 
-func GetQuoteFromApi() *QuoteObject {
+func GetQuoteFromApi(dogFriday bool) *QuoteObject {
 	log.Info("Grabbing quotes from api")
 	resp, err := http.Get(quoteApiUrl)
+	if err != nil {
+		defer resp.Body.Close()
+		log.Fatal(err)
+	}
 	defer resp.Body.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -48,5 +53,9 @@ func GetQuoteFromApi() *QuoteObject {
 	if readErr != nil {
 		log.Fatal(readErr)
 	}
-	return parseQuoteJsonResponse(body)
+	quote := parseQuoteJsonResponse(body)
+	if dogFriday {
+		quote.Quote = fmt.Sprintf("It's Dog Friday!\n\n%s", quote.Quote)
+	}
+	return quote
 }
