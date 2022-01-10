@@ -62,7 +62,7 @@ func isCatImageSmallEnough(url string) bool {
 // isCatImageBanned checks a blacklist for known bad cat images
 func isCatImageBanned(url string) bool {
 	for _, bannedImage := range bannedCatList {
-		if strings.Contains(strings.ToLower(url), strings.ToLower(bannedImage)) {
+		if strings.Contains(url, bannedImage) {
 			return true
 		}
 	}
