@@ -2,7 +2,7 @@
 
 This is a dumb program that uses golang to fetch the quote of the day from `http://quote.rest/` and then uses twilio to send it to my phone.  The real value of it is that it's a simple thing that can be served up via k8s in a cronjob.
 
-Starting in v2, I've add the [CatAPI](https://thecatapi.com/) as bonus picture inside the message.
+Starting in v0.10, I added the [CatAPI](https://thecatapi.com/) as bonus picture inside the message. Starting in v1.0, I added the [Dog API](https://dog.ceo/dog-api/) to show on Fridays, as well as added support for way more cats via filetypes supported natively by Twilio.
 
 <img src="./imgs/example_message.jpeg" width="360" height="640" alt="Example Message"/>
 
