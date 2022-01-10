@@ -48,12 +48,17 @@ jobs:
           tags: loganballard/quote-msg-arm:dev
         if: github.event_name == 'pull_request'
 
+      - id: bump
+        uses: zwaldowski/match-label-action@v1
+        with:
+          allowed: major,minor,patch
+
       - name: semver bump
         id: semver_bump
         uses: zwaldowski/semver-release-action@v2
         with:
           prefix: v
-          bump: patch
+          bump: ${{ steps.bump.outputs.match }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
