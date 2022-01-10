@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	catApiUrl  string = "https://api.thecatapi.com/v1/images/search?api_key=61c67453-a15e-4a0e-8254-ade03fb0ec05&mime_types=png"
+	catApiUrl  string = "https://api.thecatapi.com/v1/images/search?api_key=61c67453-a15e-4a0e-8254-ade03fb0ec05"
 	dogApiUrl  string = "https://dog.ceo/api/breeds/image/random"
 	urlRetries int    = 5
 )
@@ -150,9 +150,9 @@ func GetAnimalFromApi(dogFriday bool) string {
 			}
 		} else {
 			url = parseDogJsonResponse(respBody)
-			if !isFileTypeAllowed(url) {
-				continue
-			}
+		}
+		if !isFileTypeAllowed(url) {
+			continue
 		}
 		if isImageSmallEnough(url) {
 			log.Infof("animal %v was under the file limit, returning", url)
