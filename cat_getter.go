@@ -2,14 +2,23 @@ package main
 
 import (
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
-const catApiUrl string = "https://api.thecatapi.com/v1/images/search?api_key=61c67453-a15e-4a0e-8254-ade03fb0ec05&mime_types=png"
+const (
+	catApiUrl     string = "https://api.thecatapi.com/v1/images/search?api_key=61c67453-a15e-4a0e-8254-ade03fb0ec05&mime_types=png"
+	catUrlRetries int    = 5
+)
+
+var (
+	bannedCatList = [...]string{"MzbkKPaBt"}
+)
 
 type CatObject struct {
 	Url string `json: url`
@@ -39,6 +48,9 @@ func isCatImageSmallEnough(url string) bool {
 		log.Fatal(err)
 	}
 	fileInfo, err := os.Stat("./tmpCat")
+	if err != nil {
+		log.Fatal(err)
+	}
 	err = os.Remove("./tmpCat")
 	if err != nil {
 		log.Fatal(err)
@@ -47,6 +59,15 @@ func isCatImageSmallEnough(url string) bool {
 	return fileInfo.Size() <= 5000000
 }
 
+// isCatImageBanned checks a blacklist for known bad cat images
+func isCatImageBanned(url string) bool {
+	for _, bannedImage := range bannedCatList {
+		if strings.Contains(url, bannedImage) {
+			return true
+		}
+	}
+	return false
+}
 
 func parseCatJsonResponse(responseBody []byte) string {
 	var val []CatObject
@@ -60,21 +81,29 @@ func parseCatJsonResponse(responseBody []byte) string {
 // GetCatFromApi returns a URL with a random cat pic
 // It must be <5mb, and will retry 5 times to get a cat
 func GetCatFromApi() string {
-	for i := 0; i < 5; i++ {
+	for i := 0; i < catUrlRetries; i++ {
 		log.Info("getting cat from api")
 		resp, err := http.Get(catApiUrl)
-		defer resp.Body.Close()
-		if err != nil{
+		if err != nil {
+			defer resp.Body.Close()
 			log.Fatal(err)
 		}
-			if !(resp.StatusCode < 300){
+		defer resp.Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if !(resp.StatusCode < 300) {
 			log.Fatalf("Status code was %v", resp.StatusCode)
 		}
-			respBody, err := ioutil.ReadAll(resp.Body)
-			if err != nil{
+		respBody, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
 			log.Fatal(err)
 		}
 		url := parseCatJsonResponse(respBody)
+		if isCatImageBanned(url) {
+			log.Infof("cat %v was on the blacklist, trying again", url)
+			continue
+		}
 		if isCatImageSmallEnough(url) {
 			log.Infof("cat %v was under the file limit, returning", url)
 			return url
