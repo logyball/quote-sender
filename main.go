@@ -19,14 +19,14 @@ var LastSuccess = prometheus.NewGauge(prometheus.GaugeOpts{
 
 func main() {
 	isItDogFridayBabeee := time.Now().Weekday().String() == "Friday"
-	quote := GetQuoteFromApi(isItDogFridayBabeee)
+	quote := GetQuoteFromApi()
 	animalUrl := GetAnimalFromApi(isItDogFridayBabeee)
 	numbersToText, err := getNumbersToText()
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, phoneNumber := range numbersToText {
-		err := SendMessage(quote, animalUrl, phoneNumber)
+		err := SendMessage(quote, animalUrl, isItDogFridayBabeee, phoneNumber)
 		if err != nil {
 			log.Fatal(err)
 		}

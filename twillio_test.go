@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBuildTwilioMessage(t *testing.T) {
@@ -12,13 +13,14 @@ func TestBuildTwilioMessage(t *testing.T) {
 		Quote:  "quote",
 		Author: "author",
 	}
-	catUrl := "www.google.com"
+	animalUrl := "www.google.com"
+	dogFriday := false
 	numberTo := "12345"
-	req := buildTwilioMessage(&testQuoteObj, catUrl, numberTo)
+	req := buildTwilioMessage(&testQuoteObj, animalUrl, dogFriday, numberTo)
 
 	assert.Equal(t, "https://api.twilio.com/2010-04-01/Accounts/AC785587cdbdd787fd35de9c2440f6ec26/Messages.json", req.URL.String())
 	assert.Contains(t, req.Header.Get("Accept"), "application/json")
-	assert.Contains(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded",)
+	assert.Contains(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 	assert.Equal(t, "POST", req.Method)
 	assert.NotEmpty(t, req.Body)
 	_ = os.Unsetenv("TWILIO_AUTH")
@@ -42,7 +44,6 @@ func TestGetPhoneNumbersFromEnv(t *testing.T) {
 	assert.NotContains(t, numbersToText, "+166666666667")
 	_ = os.Unsetenv("PHONE_NUMBERS")
 }
-
 
 func TestGetTwilioAuthErrorWhenEnvNotPresent(t *testing.T) {
 	_ = os.Unsetenv("TWILIO_AUTH")

@@ -55,22 +55,25 @@ func getTwilioAuth() (string, error) {
 	return "", errors.New("no twilio auth found in environment vars")
 }
 
-func buildTextString(quotes *QuoteObject) string {
+func buildTextString(quotes *QuoteObject, dogFriday bool) string {
+	if dogFriday {
+		return fmt.Sprintf("🐕 It's Dog Friday! 🐕\n\n\"%v\"\n\n-%v", quotes.Quote, quotes.Author)
+	}
 	return fmt.Sprintf("\"%v\"\n\n-%v", quotes.Quote, quotes.Author)
 }
 
-func buildTwilioMsgData(quote *QuoteObject, catUrl string, numberTo string) *strings.Reader {
-	msgString := buildTextString(quote)
+func buildTwilioMsgData(quote *QuoteObject, animalUrl string, dogFriday bool, numberTo string) *strings.Reader {
+	msgString := buildTextString(quote, dogFriday)
 	msgData := url.Values{}
 	msgData.Set("To", numberTo)
 	msgData.Set("From", TwilioNumberFrom)
 	msgData.Set("Body", msgString)
-	msgData.Set("MediaUrl", catUrl)
+	msgData.Set("MediaUrl", animalUrl)
 	return strings.NewReader(msgData.Encode())
 }
 
-func buildTwilioMessage(quote *QuoteObject, catUrl string, numberTo string) http.Request {
-	msgDataReader := buildTwilioMsgData(quote, catUrl, numberTo)
+func buildTwilioMessage(quote *QuoteObject, animalUrl string, dogFriday bool, numberTo string) http.Request {
+	msgDataReader := buildTwilioMsgData(quote, animalUrl, dogFriday, numberTo)
 	req, err := http.NewRequest("POST", TwilioUrl, msgDataReader)
 	if err != nil {
 		log.Fatal(err)
@@ -85,8 +88,8 @@ func buildTwilioMessage(quote *QuoteObject, catUrl string, numberTo string) http
 	return *req
 }
 
-func SendMessage(quote *QuoteObject, catUrl string, numberTo string) error {
-	msgReq := buildTwilioMessage(quote, catUrl, numberTo)
+func SendMessage(quote *QuoteObject, animalUrl string, dogFriday bool, numberTo string) error {
+	msgReq := buildTwilioMessage(quote, animalUrl, dogFriday, numberTo)
 	client := &http.Client{}
 
 	log.Printf("Sending Request to %s via Twilio API: %v\n", numberTo, msgReq)

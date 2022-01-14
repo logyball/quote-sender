@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestQuoteDecode(t *testing.T) {
@@ -20,6 +21,5 @@ func TestBuildQuoteMsgStr(t *testing.T) {
 		Quote:  "This is a Quote",
 		Author: "Author",
 	}
-	assert.Equal(t, "\"This is a Quote\"\n\n-Author", buildTextString(&quote))
+	assert.Equal(t, "\"This is a Quote\"\n\n-Author", buildTextString(&quote, false))
 }
-
