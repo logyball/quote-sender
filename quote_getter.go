@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -34,7 +33,7 @@ func parseQuoteJsonResponse(responseBody []byte) *QuoteObject {
 	return &val.Contents.Quotes[0]
 }
 
-func GetQuoteFromApi(dogFriday bool) *QuoteObject {
+func GetQuoteFromApi() *QuoteObject {
 	log.Info("Grabbing quotes from api")
 	resp, err := http.Get(quoteApiUrl)
 	if err != nil {
@@ -54,8 +53,5 @@ func GetQuoteFromApi(dogFriday bool) *QuoteObject {
 		log.Fatal(readErr)
 	}
 	quote := parseQuoteJsonResponse(body)
-	if dogFriday {
-		quote.Quote = fmt.Sprintf("It's Dog Friday!\n\n%s", quote.Quote)
-	}
 	return quote
 }
