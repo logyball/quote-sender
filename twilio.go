@@ -74,7 +74,7 @@ func buildTwilioMsgData(quote *QuoteObject, animalUrl string, dogFriday bool, nu
 
 func buildTwilioMessage(quote *QuoteObject, animalUrl string, dogFriday bool, numberTo string) http.Request {
 	msgDataReader := buildTwilioMsgData(quote, animalUrl, dogFriday, numberTo)
-	req, err := http.NewRequest("POST", TwilioUrl, msgDataReader)
+	req, err := http.NewRequest(http.MethodPost, TwilioUrl, msgDataReader)
 	if err != nil {
 		log.Fatal(err)
 	}

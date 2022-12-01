@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -33,25 +34,27 @@ func parseQuoteJsonResponse(responseBody []byte) *QuoteObject {
 	return &val.Contents.Quotes[0]
 }
 
-func GetQuoteFromApi() *QuoteObject {
+func GetQuoteFromApi() (*QuoteObject, error) {
 	log.Info("Grabbing quotes from api")
+
 	resp, err := http.Get(quoteApiUrl)
-	if err != nil {
-		defer resp.Body.Close()
-		log.Fatal(err)
-	}
 	defer resp.Body.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Error("failed to HTTP get quote")
+		return nil, err
 	}
 	if !(resp.StatusCode < 300) {
-		log.Fatalf("Status Code was %v", resp.StatusCode)
+		log.Errorf("HTTP Status code check failed: %d", resp.StatusCode)
+		return nil, fmt.Errorf("HTTP Status code check failed: %d", resp.StatusCode)
 	}
-	body, readErr := ioutil.ReadAll(resp.Body)
+
+	body, err := ioutil.ReadAll(resp.Body)
 	log.Infof("Quotes API returned: %v", string(body))
-	if readErr != nil {
-		log.Fatal(readErr)
+	if err != nil {
+		log.WithError(err).Error("Error reading quote api return into struct")
+		return nil, err
 	}
+
 	quote := parseQuoteJsonResponse(body)
-	return quote
+	return quote, nil
 }
