@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -24,7 +25,7 @@ var (
 )
 
 type CatObject struct {
-	Url string `json: url`
+	Url string `json:"url"`
 }
 
 type DogObject struct {
@@ -40,11 +41,13 @@ func downloadFile(filepath string, url string) error {
 		return err
 	}
 	defer resp.Body.Close()
+
 	out, err := os.Create(filepath)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
+
 	_, err = io.Copy(out, resp.Body)
 	return err
 }
@@ -55,14 +58,17 @@ func isImageSmallEnough(url string) bool {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	fileInfo, err := os.Stat("./tmpAnimal")
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	err = os.Remove("./tmpAnimal")
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	log.Infof("Animal image %v was %v bytes", url, fileInfo.Size())
 	return fileInfo.Size() <= 5000000
 }
@@ -85,6 +91,7 @@ func isFileTypeAllowed(url string) bool {
 		log.Infof("Could not parse filepath string of %v into filetype", filepath)
 		return false
 	}
+
 	fileExtension := filepathSplit[1]
 	for _, filetype := range allowedFileTypes {
 		if fileExtension == filetype {
@@ -92,6 +99,7 @@ func isFileTypeAllowed(url string) bool {
 			return true
 		}
 	}
+
 	log.Infof("Filetype was not allowed for %v", url)
 	return false
 }
@@ -116,7 +124,7 @@ func parseDogJsonResponse(responseBody []byte) string {
 
 // GetAnimalFromApi returns a URL with a random cat pic
 // It must be <5mb, and will retry 5 times to get a cat
-func GetAnimalFromApi(dogFriday bool) string {
+func GetAnimalFromApi(dogFriday bool) (string, error) {
 	for i := 0; i < urlRetries; i++ {
 		log.Info("getting animal from api")
 		var resp *http.Response
@@ -129,20 +137,22 @@ func GetAnimalFromApi(dogFriday bool) string {
 			resp, err = http.Get(dogApiUrl)
 		}
 		if err != nil {
-			defer resp.Body.Close()
-			log.Fatal(err)
+			log.WithError(err).Error("failed to HTTP get animal URL")
+			return "", err
 		}
 		defer resp.Body.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
+
 		if !(resp.StatusCode < 300) {
-			log.Fatalf("Status code was %v", resp.StatusCode)
+			log.Errorf("Status code was %v", resp.StatusCode)
+			return "", fmt.Errorf("status code was %v", resp.StatusCode)
 		}
+
 		respBody, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Fatal(err)
+			log.WithError(err).Error("Error reading response body")
+			return "", err
 		}
+
 		if !dogFriday {
 			url = parseCatJsonResponse(respBody)
 			if isCatImageBanned(url) {
@@ -151,15 +161,17 @@ func GetAnimalFromApi(dogFriday bool) string {
 		} else {
 			url = parseDogJsonResponse(respBody)
 		}
+
 		if !isFileTypeAllowed(url) {
 			continue
 		}
 		if isImageSmallEnough(url) {
 			log.Infof("animal %v was under the file limit, returning", url)
-			return url
+			return url, nil
 		}
+
 		log.Infof("animal %v was too large :(, trying again", url)
 	}
-	log.Fatalf("Couldn't find a suitable animal in 5 tries :(, quitting with error")
-	return ""
+
+	return "", fmt.Errorf("couldn't find a suitable animal in %d tries :(, quitting with error", urlRetries)
 }

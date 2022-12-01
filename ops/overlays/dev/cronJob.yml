@@ -23,3 +23,7 @@ spec:
                   secretKeyRef:
                     name: phone-numbers-dev
                     key: numbers
+              - name: TZ
+                value: "America/Los_Angeles"
+              - name: ERR_NOTIFICATION_TOPIC
+                value: "logyball_cat_of_the_day_err_notifications_dev"
