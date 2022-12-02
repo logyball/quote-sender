@@ -12,6 +12,7 @@ on:
     paths-ignore:
       - '**/*.md'
       - 'imgs/**'
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
