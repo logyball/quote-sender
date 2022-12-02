@@ -35,6 +35,12 @@ spec:
                   value: "logyball_cat_of_the_day_err_notifications"
                 - name: ENVIRONMENT
                   value: prod
+                - name: ERROR_REPORT_ENABLED
+                  value: "true"
+                - name: PUSH_TO_PROMETHEUS
+                  value: "true"
+                - name: PROMETHEUS_GATEWAY_URI
+                  value: "http://prometheus-pushgateway.monitoring:9091/"
               imagePullPolicy: Always
           restartPolicy: OnFailure
       backoffLimit: 2

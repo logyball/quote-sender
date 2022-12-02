@@ -49,10 +49,13 @@ func getNumbersToText() ([]string, error) {
 }
 
 func getTwilioAuth() (string, error) {
+	log.Debug("getting twilio auth")
+
 	authKey := os.Getenv("TWILIO_AUTH")
 	if authKey != "" {
 		return authKey, nil
 	}
+
 	return "", errors.New("no twilio auth found in environment vars")
 }
 
@@ -73,37 +76,57 @@ func buildTwilioMsgData(quote *QuoteObject, animalUrl string, dogFriday bool, nu
 	return strings.NewReader(msgData.Encode())
 }
 
-func buildTwilioMessage(quote *QuoteObject, animalUrl string, dogFriday bool, numberTo string) http.Request {
+func buildTwilioMessage(quote *QuoteObject, animalUrl string, dogFriday bool, numberTo string) (*http.Request, error) {
+	log.WithFields(log.Fields{
+		"quote":     quote.Quote,
+		"author":    quote.Author,
+		"url":       animalUrl,
+		"dogFriday": dogFriday,
+		"numberTo":  numberTo,
+	}).Debug("building twilio message")
+
 	msgDataReader := buildTwilioMsgData(quote, animalUrl, dogFriday, numberTo)
 	req, err := http.NewRequest(http.MethodPost, TwilioUrl, msgDataReader)
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Error("error building post req for twilio")
+		return nil, err
 	}
+
 	auth, err := getTwilioAuth()
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Error("error building post req for twilio")
+		return nil, err
 	}
+
 	req.SetBasicAuth(TwilioSid, auth)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	return *req
+	return req, nil
 }
 
 func SendMessage(quote *QuoteObject, animalUrl string, dogFriday bool, numberTo string) error {
-	msgReq := buildTwilioMessage(quote, animalUrl, dogFriday, numberTo)
+	log.Debug("Sending message to twilio")
+
+	msgReq, err := buildTwilioMessage(quote, animalUrl, dogFriday, numberTo)
+	if err != nil {
+		return err
+	}
+
 	client := &http.Client{}
 
-	log.Printf("Sending Request to %s via Twilio API: %v\n", numberTo, msgReq)
-	resp, err := client.Do(&msgReq)
+	log.Infof("Sending Request to %s via Twilio API: %v\n", numberTo, msgReq)
+	resp, err := client.Do(msgReq)
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Error("error sending post request")
 		return err
 	}
+
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Error("error reading response")
 		return err
 	}
-	log.Printf("Twilio API Response: %v", string(respBody))
+
+	log.Infof("Twilio API Response: %v", string(respBody))
 	return nil
 }
