@@ -16,7 +16,7 @@ import (
 
 const pushGatewayUri string = "http://prometheus-pushgateway.monitoring:9091/"
 const promJobName string = "quote-messenger"
-const notificationTopicBase string = "https://www.ntfy.sh/%s"
+const notificationTopicBase string = "https://ntfy.sh/%s"
 
 var LastSuccess = prometheus.NewGauge(prometheus.GaugeOpts{
 	Name: "quote_messenger_last_successful_run",
