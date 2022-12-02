@@ -36,10 +36,10 @@ prod:
 
 ### Secrets
 
-The phone numbers to text as well as the twilio api key are obscured as secrets.  Set them as environment variables for local testing:
+The phone numbers to text, the cat api key (get yours [here](https://thecatapi.com/signup)) as well as the twilio api key are obscured as secrets.  Set them as environment variables for local testing:
 
 ```shell
-TWILIO_AUTH=api-key PHONE_NUMBERS=+16666666666,+16666666666 go run .
+TWILIO_AUTH=api-key CAT_API_KEY=api-key PHONE_NUMBERS=+16666666666,+16666666666 go run .
 ```
 
 ### Adding New Phone Numbers

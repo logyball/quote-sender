@@ -4,3 +4,4 @@ resources:
   - namespace.yml
   - phoneSecret.yml
   - twilioAuthSecret.yml
+  - catApiKeySecret.yml
