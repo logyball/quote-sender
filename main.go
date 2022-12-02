@@ -26,7 +26,7 @@ var LastSuccess = prometheus.NewGauge(prometheus.GaugeOpts{
 func errHandling(err error, explaination string) {
 	topic := os.Getenv("ERR_NOTIFICATION_TOPIC")
 	if topic == "" {
-		log.Fatal("Error in the err handling, ironic")
+		log.Fatal("Failed to retrieve error notification topic from environment vars")
 	}
 
 	log.WithField("err", err).WithField("explaination", explaination).Info("Error handling")
@@ -53,6 +53,7 @@ func errHandling(err error, explaination string) {
 }
 
 func setLogLevel() {
+	log.SetReportCaller(true)
 	env := os.Getenv("ENVIRONMENT")
 	if env == "prod" {
 		log.SetLevel(log.DebugLevel)
@@ -100,17 +101,26 @@ func main() {
 	}
 
 	for _, phoneNumber := range numbersToText {
-		err := SendMessage(quote, animalUrl, isItDogFridayBabeee, phoneNumber)
-		if err != nil {
-			errHandling(err, "Error sending messages w/ twilio")
-			log.Fatal(err)
-		}
+		p := phoneNumber
+
+		eg.Go(func() error {
+			err := SendMessage(quote, animalUrl, isItDogFridayBabeee, p)
+			if err != nil {
+				errHandling(err, "Error sending messages w/ twilio")
+			}
+			return err
+		})
+	}
+
+	err = eg.Wait()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	LastSuccess.SetToCurrentTime()
 	err = push.New(pushGatewayUri, promJobName).Collector(LastSuccess).Push()
 	if err != nil {
-		log.Info("Sending success metric failed.  the irony")
+		log.Error("Sending success metric failed.  the irony")
 		errHandling(err, "Error sending metric to push gateway")
 		log.Fatal(err)
 	}

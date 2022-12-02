@@ -16,13 +16,14 @@ func TestBuildTwilioMessage(t *testing.T) {
 	animalUrl := "www.google.com"
 	dogFriday := false
 	numberTo := "12345"
-	req := buildTwilioMessage(&testQuoteObj, animalUrl, dogFriday, numberTo)
+	req, err := buildTwilioMessage(&testQuoteObj, animalUrl, dogFriday, numberTo)
 
 	assert.Equal(t, "https://api.twilio.com/2010-04-01/Accounts/AC785587cdbdd787fd35de9c2440f6ec26/Messages.json", req.URL.String())
 	assert.Contains(t, req.Header.Get("Accept"), "application/json")
 	assert.Contains(t, req.Header.Get("Content-Type"), "application/x-www-form-urlencoded")
 	assert.Equal(t, "POST", req.Method)
 	assert.NotEmpty(t, req.Body)
+	assert.Nil(t, err)
 	_ = os.Unsetenv("TWILIO_AUTH")
 }
 
