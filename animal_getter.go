@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	catApiUrlBase string = "https://api.thecatapi.com/v1/images/search?api_key=%s" //61c67453-a15e-4a0e-8254-ade03fb0ec05"
+	catApiUrlBase string = "https://api.thecatapi.com/v1/images/search?api_key=%s"
 	dogApiUrl     string = "https://dog.ceo/api/breeds/image/random"
 	urlRetries    int    = 5
 	maxFileSize   int    = 5000000 // 5 MB
