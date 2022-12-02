@@ -23,7 +23,12 @@ const (
 
 var (
 	bannedCatList    = [...]string{"MzbkKPaBt"}
-	allowedFileTypes = [...]string{"jpeg", "jpg", "gif", "png"}
+	allowedFileTypes = map[string]bool{
+		"jpeg": true,
+		"jpg":  true,
+		"gif":  true,
+		"png":  true,
+	}
 )
 
 type CatObject struct {
@@ -56,99 +61,137 @@ func downloadFile(filepath string, url string) error {
 }
 
 // isImageSmallEnough makes sure that the returned cat URL is <5mb
-func isImageSmallEnough(url string) bool {
+func isImageSmallEnough(url string) (bool, error) {
 	log.WithField("url", url).Debugf("checking if file is under the limit of %d bytes", maxFileSize)
 
 	err := downloadFile("./tmpAnimal", url)
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Error("failed to download file")
+		return false, err
 	}
 
 	fileInfo, err := os.Stat("./tmpAnimal")
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Error("failed to get file stats")
+		return false, err
 	}
 
 	err = os.Remove("./tmpAnimal")
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Error("failed to remove file")
+		return false, err
 	}
 
 	log.Infof("Animal image %v was %v bytes", url, fileInfo.Size())
-	return fileInfo.Size() <= int64(maxFileSize)
+	return fileInfo.Size() <= int64(maxFileSize), nil
 }
 
 // isCatImageBanned checks a blacklist for known bad cat images
 func isCatImageBanned(url string) bool {
+	log.WithField("url", url).Debug("checking URL for banned cat images")
+
 	for _, bannedImage := range bannedCatList {
 		if strings.Contains(url, bannedImage) {
-			log.Infof("cat %v was on the blacklist, trying again", url)
+			log.Infof("cat %s was on the blacklist", url)
 			return true
 		}
 	}
+
 	return false
 }
 
-func isFileTypeAllowed(url string) bool {
+func isFileTypeAllowed(url string) (bool, error) {
+	log.WithField("url", url).Debug("checking URL contains a file on twilios allowed file type list")
+
 	filepath := path.Base(url)
 	filepathSplit := strings.Split(filepath, ".")
 	if len(filepathSplit) < 1 {
-		log.Infof("Could not parse filepath string of %v into filetype", filepath)
-		return false
+		log.Errorf("Could not parse filepath string of %s into filetype", filepath)
+		return false, fmt.Errorf("could not parse filepath string of %s into filetype", filepath)
 	}
 
 	fileExtension := filepathSplit[1]
-	for _, filetype := range allowedFileTypes {
-		if fileExtension == filetype {
-			log.Infof("Filetype was allowed for %v", url)
-			return true
-		}
+	if _, ok := allowedFileTypes[fileExtension]; ok {
+		return true, nil
 	}
 
-	log.Infof("Filetype was not allowed for %v", url)
-	return false
+	log.Errorf("Filetype was not allowed for %s", url)
+	return false, fmt.Errorf("filetype was not allowed for %s", url)
 }
 
-func parseCatJsonResponse(responseBody []byte) string {
+func parseCatJsonResponse(responseBody []byte) (string, error) {
+	log.Debug("parsing response from the cat API")
 	var val []CatObject
 
 	err := json.Unmarshal(responseBody, &val)
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Error("failed to parse cat API response")
+		return "", err
 	}
-	return val[0].Url
+
+	return val[0].Url, nil
 }
 
-func parseDogJsonResponse(responseBody []byte) string {
+func parseDogJsonResponse(responseBody []byte) (string, error) {
+	log.Debug("parsing response from the dog API")
 	var val DogObject
+
 	err := json.Unmarshal(responseBody, &val)
-	if err != nil || val.Status != "success" {
-		log.Fatal(err)
+	if err != nil {
+		log.WithError(err).Error("failed to parse dog API response")
+		return "", err
 	}
-	return val.Message
+	if val.Status != "success" {
+		log.Error("dog API returned a non-successful status")
+		return "", fmt.Errorf("dog API returned a non-successful status: %+v", val)
+	}
+
+	return val.Message, nil
+}
+
+func getCatApiResponse() (*http.Response, error) {
+	log.Debug("getting info from the cat API")
+
+	catApiKey := os.Getenv("CAT_API_KEY")
+	if catApiKey == "" {
+		log.Error("CAT_API_KEY not found in environment vars")
+		return nil, errors.New("CAT_API_KEY not found in environment vars")
+	}
+
+	return http.Get(fmt.Sprintf(catApiUrlBase, catApiKey))
+}
+
+func getAnimalApiResponse(dogFriday bool) (*http.Response, error) {
+	if dogFriday {
+		log.Debug("getting info from the dog API")
+		return http.Get(dogApiUrl)
+	}
+	return getCatApiResponse()
+}
+
+func parseAnimalResponse(dogFriday bool, responseBody []byte) (string, error) {
+	if dogFriday {
+		return parseDogJsonResponse(responseBody)
+	}
+	url, err := parseCatJsonResponse(responseBody)
+	if isCatImageBanned(url) {
+		return "", fmt.Errorf("cat %s is on the blacklist", url)
+	}
+
+	return url, err
 }
 
 // GetAnimalFromApi returns a URL with a random cat pic
 // It must be <5mb, and will retry 5 times to get a cat
 func GetAnimalFromApi(dogFriday bool) (string, error) {
+	log.WithField("isDogFriday", dogFriday).Debug("Getting animal image from dog/cat API")
+
+	var resp *http.Response
+	var err error
+	var url string
+
 	for i := 0; i < urlRetries; i++ {
-		log.Info("getting animal from api")
-		var resp *http.Response
-		var err error
-		var url string
-
-		if !dogFriday {
-			catApiKey := os.Getenv("CAT_API_KEY")
-			if catApiKey == "" {
-				log.Error("CAT_API_KEY not found in environment vars")
-				return "", errors.New("CAT_API_KEY not found in environment vars")
-			}
-
-			catApiUrl := fmt.Sprintf(catApiUrlBase, catApiKey)
-			resp, err = http.Get(catApiUrl)
-		} else {
-			resp, err = http.Get(dogApiUrl)
-		}
+		resp, err = getAnimalApiResponse(dogFriday)
 		if err != nil {
 			log.WithError(err).Error("failed to HTTP get animal URL")
 			return "", err
@@ -166,24 +209,25 @@ func GetAnimalFromApi(dogFriday bool) (string, error) {
 			return "", err
 		}
 
-		if !dogFriday {
-			url = parseCatJsonResponse(respBody)
-			if isCatImageBanned(url) {
-				continue
-			}
-		} else {
-			url = parseDogJsonResponse(respBody)
-		}
-
-		if !isFileTypeAllowed(url) {
+		url, err = parseAnimalResponse(dogFriday, respBody)
+		if err != nil {
 			continue
 		}
-		if isImageSmallEnough(url) {
-			log.Infof("animal %v was under the file limit, returning", url)
-			return url, nil
+
+		allowed, err := isFileTypeAllowed(url)
+		if err != nil || !allowed {
+			continue
 		}
 
-		log.Infof("animal %v was too large :(, trying again", url)
+		smallEnough, err := isImageSmallEnough(url)
+		if err != nil {
+			continue
+		}
+
+		if smallEnough {
+			log.Infof("animal %s was under the file limit, returning", url)
+			return url, nil
+		}
 	}
 
 	return "", fmt.Errorf("couldn't find a suitable animal in %d tries :(, quitting with error", urlRetries)
