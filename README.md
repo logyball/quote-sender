@@ -10,7 +10,7 @@ Starting in v0.10, I added the [CatAPI](https://thecatapi.com/) as bonus picture
 
 1. Go v1.19+
 2. Working Kubernetes Cluster w/ the [SealedSecrets CRD](https://github.com/bitnami-labs/sealed-secrets) installed
-3. Twilio Subscription and API Key
+3. [Twilio Subscription and API Key](https://www.twilio.com/docs/usage/api)
 4. (optional) [ntfy.sh](https://ntfy.sh) for error reporting
 5. (optional) a prometheus pushgateway instance
 
@@ -57,7 +57,20 @@ prod:
 The phone numbers to text, the cat api key (get yours [here](https://thecatapi.com/signup)) as well as the twilio api key are obscured as secrets.  Set them as environment variables for local testing:
 
 ```shell
-TWILIO_AUTH=api-key CAT_API_KEY=api-key PHONE_NUMBERS=+16666666666,+16666666666 ERR_NOTIFICATION_TOPIC=your_err_notification_topic go run .
+TWILIO_AUTH=api-key CAT_API_KEY=api-key PHONE_NUMBERS=+16666666666,+16666666666 go run .
+```
+
+If you want to test locally with error reporting and prometheus metrics, it's a bit more involved:
+
+```shell
+TWILIO_AUTH=api-key \
+  PHONE_NUMBERS=+16666666666 \
+  CAT_API_KEY=api-key \
+  ERROR_REPORT_ENABLED=true \
+  ERR_NOTIFICATION_TOPIC=your_topic \
+  PUSH_TO_PROMETHEUS=true \
+  PROMETHEUS_GATEWAY_URI=your_gateway_uri \
+  go run .
 ```
 
 ### Adding New Phone Numbers
