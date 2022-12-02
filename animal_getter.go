@@ -82,7 +82,6 @@ func isImageSmallEnough(url string) (bool, error) {
 		return false, err
 	}
 
-	log.Infof("Animal image %v was %v bytes", url, fileInfo.Size())
 	return fileInfo.Size() <= int64(maxFileSize), nil
 }
 
@@ -225,7 +224,7 @@ func GetAnimalFromApi(dogFriday bool) (string, error) {
 		}
 
 		if smallEnough {
-			log.Infof("animal %s was under the file limit, returning", url)
+			log.Infof("url fits all criteria, returning %s", url)
 			return url, nil
 		}
 	}

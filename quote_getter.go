@@ -69,6 +69,7 @@ func getQuoteFromApi() (*QuoteObject, error) {
 			continue
 		}
 
+		log.Info("Quote object returned: %+v", quoteObj)
 		return quoteObj, nil
 	}
 
