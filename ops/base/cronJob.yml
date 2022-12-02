@@ -24,6 +24,11 @@ spec:
                     secretKeyRef:
                       name: phone-numbers
                       key: numbers
+                - name: CAT_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: cat-api-key
+                      key: apiKey
                 - name: TZ
                   value: "America/Los_Angeles"
                 - name: ERR_NOTIFICATION_TOPIC

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,9 +15,10 @@ import (
 )
 
 const (
-	catApiUrl  string = "https://api.thecatapi.com/v1/images/search?api_key=61c67453-a15e-4a0e-8254-ade03fb0ec05"
-	dogApiUrl  string = "https://dog.ceo/api/breeds/image/random"
-	urlRetries int    = 5
+	catApiUrlBase string = "https://api.thecatapi.com/v1/images/search?api_key=%s" //61c67453-a15e-4a0e-8254-ade03fb0ec05"
+	dogApiUrl     string = "https://dog.ceo/api/breeds/image/random"
+	urlRetries    int    = 5
+	maxFileSize   int    = 5000000 // 5 MB
 )
 
 var (
@@ -35,7 +37,8 @@ type DogObject struct {
 
 // downloadFile rips a file straight from the internet onto the local filesystem
 func downloadFile(filepath string, url string) error {
-	log.Infof("downloading %v", url)
+	log.WithFields(log.Fields{"filepath": filepath, "url": url}).Debug("downloading file")
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
@@ -54,6 +57,8 @@ func downloadFile(filepath string, url string) error {
 
 // isImageSmallEnough makes sure that the returned cat URL is <5mb
 func isImageSmallEnough(url string) bool {
+	log.WithField("url", url).Debugf("checking if file is under the limit of %d bytes", maxFileSize)
+
 	err := downloadFile("./tmpAnimal", url)
 	if err != nil {
 		log.Fatal(err)
@@ -70,7 +75,7 @@ func isImageSmallEnough(url string) bool {
 	}
 
 	log.Infof("Animal image %v was %v bytes", url, fileInfo.Size())
-	return fileInfo.Size() <= 5000000
+	return fileInfo.Size() <= int64(maxFileSize)
 }
 
 // isCatImageBanned checks a blacklist for known bad cat images
@@ -106,6 +111,7 @@ func isFileTypeAllowed(url string) bool {
 
 func parseCatJsonResponse(responseBody []byte) string {
 	var val []CatObject
+
 	err := json.Unmarshal(responseBody, &val)
 	if err != nil {
 		log.Fatal(err)
@@ -132,6 +138,13 @@ func GetAnimalFromApi(dogFriday bool) (string, error) {
 		var url string
 
 		if !dogFriday {
+			catApiKey := os.Getenv("CAT_API_KEY")
+			if catApiKey == "" {
+				log.Error("CAT_API_KEY not found in environment vars")
+				return "", errors.New("CAT_API_KEY not found in environment vars")
+			}
+
+			catApiUrl := fmt.Sprintf(catApiUrlBase, catApiKey)
 			resp, err = http.Get(catApiUrl)
 		} else {
 			resp, err = http.Get(dogApiUrl)
