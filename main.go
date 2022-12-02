@@ -52,17 +52,28 @@ func errHandling(err error, explaination string) {
 	}
 }
 
+func setLogLevel() {
+	env := os.Getenv("ENVIRONMENT")
+	if env == "prod" {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.TraceLevel)
+	}
+}
+
 func main() {
 	var quote *QuoteObject
 	var err error
 	var animalUrl string
 	var numbersToText []string
 
+	setLogLevel()
 	isItDogFridayBabeee := time.Now().Weekday().String() == "Friday"
+
 	eg := new(errgroup.Group)
 
 	eg.Go(func() error {
-		quote, err = GetQuoteFromApi()
+		quote, err = GetQuote()
 		if err != nil {
 			errHandling(err, "Error getting quotes from the quote of the day API")
 		}

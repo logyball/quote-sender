@@ -28,22 +28,23 @@ func phoneNumberValidator(phoneNumber string) bool {
 // getNumbersToText expects a comma delimited list of phone numbers
 // in an environment variable, e.g. NUMBERS=+16666666666,+16666666666
 func getNumbersToText() ([]string, error) {
-	var numbersToText []string
+	log.Debug("reading in phone numbers to text from environment")
+
 	var validNumbersToText []string
 
 	numbersString := os.Getenv("PHONE_NUMBERS")
-	numbersToText = strings.Split(numbersString, ",")
-	log.Infof("numbers to text: %v", numbersToText)
+	numbersToText := strings.Split(numbersString, ",")
 	for _, num := range numbersToText {
 		if phoneNumberValidator(num) {
 			validNumbersToText = append(validNumbersToText, num)
 		}
 	}
-	log.Infof("valid numbers to text: %v", validNumbersToText)
 	if len(validNumbersToText) < 1 {
 		log.Error("couldn't find any numbers to text")
 		return nil, errors.New("couldn't find any numbers to text")
 	}
+	log.Infof("valid numbers to text: %+v", validNumbersToText)
+
 	return validNumbersToText, nil
 }
 

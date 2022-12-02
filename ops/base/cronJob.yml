@@ -33,6 +33,8 @@ spec:
                   value: "America/Los_Angeles"
                 - name: ERR_NOTIFICATION_TOPIC
                   value: "logyball_cat_of_the_day_err_notifications"
+                - name: ENVIRONMENT
+                  value: prod
               imagePullPolicy: Always
           restartPolicy: OnFailure
       backoffLimit: 2
