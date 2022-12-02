@@ -28,4 +28,10 @@ spec:
               - name: ERR_NOTIFICATION_TOPIC
                 value: "logyball_cat_of_the_day_err_notifications_dev"
               - name: ENVIRONMENT
-                  value: dev
+                value: dev
+              - name: ERROR_REPORT_ENABLED
+                value: "true"
+              - name: PUSH_TO_PROMETHEUS
+                value: "true"
+              - name: PROMETHEUS_GATEWAY_URI
+                value: "http://prometheus-pushgateway.monitoring:9091/"

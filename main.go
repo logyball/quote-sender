@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,7 +15,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const pushGatewayUri string = "http://prometheus-pushgateway.monitoring:9091/"
 const promJobName string = "quote-messenger"
 const notificationTopicBase string = "https://ntfy.sh/%s"
 
@@ -24,6 +24,11 @@ var LastSuccess = prometheus.NewGauge(prometheus.GaugeOpts{
 })
 
 func errHandling(err error, explaination string) {
+	errReportingEnabled := os.Getenv("ERROR_REPORT_ENABLED")
+	if errReportingEnabled == "" || errReportingEnabled == "false" {
+		return
+	}
+
 	topic := os.Getenv("ERR_NOTIFICATION_TOPIC")
 	if topic == "" {
 		log.Fatal("Failed to retrieve error notification topic from environment vars")
@@ -59,6 +64,26 @@ func setLogLevel() {
 		log.SetLevel(log.DebugLevel)
 	} else {
 		log.SetLevel(log.TraceLevel)
+	}
+}
+
+func pushToPrometheus() {
+	promGatewayEnabled := os.Getenv("PUSH_TO_PROMETHEUS")
+	if promGatewayEnabled == "" || promGatewayEnabled == "false" {
+		return
+	}
+
+	pushGatewayUri := os.Getenv("PROMETHEUS_GATEWAY_URI")
+	if pushGatewayUri == "" {
+		errHandling(errors.New("prometheus push gateway URI not defined"), "Error sending metric to push gateway")
+		log.Fatal("Sending success metric failed.  the irony")
+	}
+
+	LastSuccess.SetToCurrentTime()
+	err := push.New(pushGatewayUri, promJobName).Collector(LastSuccess).Push()
+	if err != nil {
+		log.Error("Sending success metric failed.  the irony")
+		errHandling(err, "Error sending metric to push gateway")
 	}
 }
 
@@ -117,11 +142,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	LastSuccess.SetToCurrentTime()
-	err = push.New(pushGatewayUri, promJobName).Collector(LastSuccess).Push()
-	if err != nil {
-		log.Error("Sending success metric failed.  the irony")
-		errHandling(err, "Error sending metric to push gateway")
-		log.Fatal(err)
-	}
+	pushToPrometheus()
 }

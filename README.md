@@ -2,9 +2,27 @@
 
 This is a dumb program that uses golang to fetch the quote of the day from `http://quote.rest/` and then uses twilio to send it to my phone.  The real value of it is that it's a simple thing that can be served up via k8s in a cronjob.
 
-Starting in v0.10, I added the [CatAPI](https://thecatapi.com/) as bonus picture inside the message. Starting in v1.0, I added the [Dog API](https://dog.ceo/dog-api/) to show on Fridays, as well as added support for way more cats via filetypes supported natively by Twilio.
+Starting in v0.10, I added the [CatAPI](https://thecatapi.com/) as bonus picture inside the message. Starting in v1.0, I added the [Dog API](https://dog.ceo/dog-api/) to show on Fridays, as well as added support for way more cats via filetypes supported natively by Twilio. As of v2.0, I've integrated into the awesome service [ntfy.sh](https://ntfy.sh/) for quick notifications on my phone if there are any errors.
 
 <img src="./imgs/example_message.jpeg" width="360" height="640" alt="Example Message"/>
+
+## Requirements
+
+1. Go v1.19+
+2. Working Kubernetes Cluster w/ the [SealedSecrets CRD](https://github.com/bitnami-labs/sealed-secrets) installed
+3. Twilio Subscription and API Key
+4. (optional) [ntfy.sh](https://ntfy.sh) for error reporting
+5. (optional) a prometheus pushgateway instance
+
+## Configuration
+
+Configure the following environment variables in `ops/*/cronJob.yml` to suit your needs:
+
+1. TZ - your time zone
+2. (if error reporting) ERR_NOTIFICATION_TOPIC - your ntfy topic
+3. (if not error reporting) ERROR_REPORT_ENABLED - set to false
+4. (if not pushing to prometheus) PUSH_TO_PROMETHEUS - set to false
+5. (if pushing to prometheus) PROMETHEUS_GATEWAY_URI - where your prometheus push gateway listens
 
 ### Building
 
@@ -39,7 +57,7 @@ prod:
 The phone numbers to text, the cat api key (get yours [here](https://thecatapi.com/signup)) as well as the twilio api key are obscured as secrets.  Set them as environment variables for local testing:
 
 ```shell
-TWILIO_AUTH=api-key CAT_API_KEY=api-key PHONE_NUMBERS=+16666666666,+16666666666 go run .
+TWILIO_AUTH=api-key CAT_API_KEY=api-key PHONE_NUMBERS=+16666666666,+16666666666 ERR_NOTIFICATION_TOPIC=your_err_notification_topic go run .
 ```
 
 ### Adding New Phone Numbers
