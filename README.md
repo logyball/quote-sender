@@ -97,3 +97,59 @@ spec:
 ```
 
 Then apply that to your cluster.
+
+## Vanilla Deployment
+
+I had previously deployed this [to my kubernetes cluster on a bunch of raspberry pis](https://loganballard.com/index.php/2021/05/26/running-kubernetes-on-raspberry-pi/).  However, they've recently stopped working and are impossible to buy new ones.  So I bit the bullet and used Google Cloud Free Tier to host a non-containerized, old-school binary that can be easily `scp`'d into the VM.
+
+In order to replicate that, deploy an Ubunutu VM to GCP (or your cloud provider of choice), and give yourself the [ability to SSH into it via an SSH Keypair](https://cloud.google.com/compute/docs/connect/add-ssh-keys).  Once you've got that, and the external IP of the VM, update your `.env` file with:
+
+- twilio API key
+- cat API key
+- phone numbers to text
+- (OPTIONALLY) error reporting stuff
+- (OPTIONALLY) prometheus things
+- `REMOTE_MACHINE_IP` = your VMs IP
+- USER_DIR = your users home directory
+
+then run `make deploy`
+
+```sh
+$ make deploy
+mkdir -p ./vanilla_deploy/tmp
+cat ./vanilla_deploy/env.template \
+		... a bunch of juicy stuff ...
+scp ./vanilla_deploy/startup.sh REMOTE_IP:/home/Ubuntu/startup.sh
+scp ./vanilla_deploy/tmp/.env REMOTE_IP:/home/Ubuntu/.env
+ssh REMOTE_IP /home/Ubuntu/startup.sh
+Hit:1 http://us-west1.gce.archive.ubuntu.com/ubuntu bionic InRelease
+Get:2 http://us-west1.gce.archive.ubuntu.com/ubuntu bionic-updates InRelease [88.7 kB]
+Get:3 http://us-west1.gce.archive.ubuntu.com/ubuntu bionic-backports InRelease [83.3 kB]
+Hit:4 http://security.ubuntu.com/ubuntu bionic-security InRelease
+Fetched 172 kB in 1s (232 kB/s)
+Reading package lists...
+Building dependency tree...
+Reading state information...
+5 packages can be upgraded. Run 'apt list --upgradable' to see them.
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Package 'golang-go' is not installed, so not removed
+The following packages were automatically installed and are no longer required:
+  golang-1.10-go golang-1.10-race-detector-runtime golang-1.10-src
+  golang-race-detector-runtime golang-src libnuma1 pkg-config
+Use 'sudo apt autoremove' to remove them.
+0 upgraded, 0 newly installed, 0 to remove and 5 not upgraded.
+go mod download
+mkdir ./dist
+go build -o ./dist/quoteCats
+rm -rf ./vanilla_deploy/tmp
+
+```
+
+This command will:
+
+- install `go` on the remote VM
+- clone this repo
+- build the binary
+- install a cron that runs this binary every day at 14:00 UTC
