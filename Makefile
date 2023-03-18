@@ -5,3 +5,8 @@ phone-yml:
 
 apply-phone: phone-yml
 	kubectl apply -f ./ops/base/phoneSecret.yml
+
+build:
+	go mod download
+	mkdir ./dist
+	go build -o ./dist/quoteCats
