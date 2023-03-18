@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 	"golang.org/x/sync/errgroup"
@@ -92,6 +93,11 @@ func main() {
 	var err error
 	var animalUrl string
 	var numbersToText []string
+
+	err = godotenv.Load()
+	if err != nil {
+		errHandling(err, "Error loading .env file")
+	}
 
 	setLogLevel()
 	isItDogFridayBabeee := time.Now().Weekday().String() == "Friday"
