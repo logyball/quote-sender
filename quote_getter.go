@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -22,7 +24,7 @@ type QuoteResponse struct {
 	Contents QuoteContents `json:"contents"`
 }
 
-const quoteApiUrl string = "http://quotes.rest/qod?category=inspire&language=en"
+const quoteApiUrl string = "https://quotes.rest/qod?category=inspire&language=en"
 const quoteApiRetries int = 5
 
 func parseQuoteJsonResponse(responseBody []byte) (*QuoteObject, error) {
@@ -41,12 +43,26 @@ func parseQuoteJsonResponse(responseBody []byte) (*QuoteObject, error) {
 func getQuoteFromApi() (*QuoteObject, error) {
 	log.Debug("Grabbing quotes from api")
 
-	var err error
+	quoteApiKey := os.Getenv("QUOTE_API_KEY")
+	if quoteApiKey == "" {
+		log.Error("QUOTE_API_KEY not found in environment vars")
+		return nil, errors.New("CAT_API_KEY not found in environment vars")
+	}
+
+	var bearer = "Bearer " + quoteApiKey
 	var resp *http.Response
 	var body []byte
 
+	req, err := http.NewRequest("GET", quoteApiUrl, nil)
+	if err != nil {
+		log.WithError(err).Error("Could not make req object")
+		return nil, err
+	}
+	req.Header.Add("Authorization", bearer)
+	client := &http.Client{}
+
 	for i := 0; i < quoteApiRetries; i++ {
-		resp, err = http.Get(quoteApiUrl)
+		resp, err = client.Do(req)
 		if err != nil {
 			log.WithError(err).Error("failed to HTTP get quote")
 			continue

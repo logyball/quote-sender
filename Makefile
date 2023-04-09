@@ -10,8 +10,9 @@ apply-phone: phone-yml
 	kubectl apply -f ./ops/base/phoneSecret.yml
 
 build:
+	rm -r dist/*
 	go mod download
-	mkdir ./dist
+	mkdir -p ./dist
 	go build -o ./dist/quoteCats
 
 deploy:
@@ -28,3 +29,9 @@ deploy:
 	ssh ${REMOTE_MACHINE_IP} ${USER_DIR}/startup.sh
 
 	rm -rf ./vanilla_deploy/tmp
+
+env:
+	sed -i '' 's/REMOTE_MACHINE_IP=.*/REMOTE_MACHINE_IP=$(shell gcloud compute instances describe "quote-sender" --billing-project="quote-sender-381016" --format="json" --zone="us-west1-a" | jq ".networkInterfaces[].accessConfigs[].natIP")/' .env
+
+ssh:
+	ssh $(shell gcloud compute instances describe 'quote-sender' --billing-project='quote-sender-381016' --format='json' --zone='us-west1-a' | jq '.networkInterfaces[].accessConfigs[].natIP')
