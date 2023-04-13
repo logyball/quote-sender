@@ -103,8 +103,7 @@ func main() {
 
 	t := time.Now().Weekday().String()
 	isItDogFridayBabeee := t == "Friday"
-	// isItTriviaTuesday := t == "Tuesday"
-	isItTriviaTuesday := true
+	isItTriviaTuesday := t == "Tuesday"
 
 	eg := new(errgroup.Group)
 
