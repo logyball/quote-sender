@@ -7,16 +7,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuildTwilioMessage(t *testing.T) {
+func TestSendTwilioMessage(t *testing.T) {
 	_ = os.Setenv("TWILIO_AUTH", "asdf")
-	testQuoteObj := QuoteObject{
-		Quote:  "quote",
-		Author: "author",
-	}
+	msg := "\"quote\"\n\n-author"
 	animalUrl := "www.google.com"
 	dogFriday := false
 	numberTo := "12345"
-	req, err := buildTwilioMessage(&testQuoteObj, animalUrl, dogFriday, numberTo)
+	req, err := buildTwilioPayload(msg, animalUrl, dogFriday, numberTo)
 
 	assert.Equal(t, "https://api.twilio.com/2010-04-01/Accounts/AC785587cdbdd787fd35de9c2440f6ec26/Messages.json", req.URL.String())
 	assert.Contains(t, req.Header.Get("Accept"), "application/json")
