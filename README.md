@@ -1,8 +1,8 @@
-# Quote and Cat Messenger
+# Quote/Trivia and Cat Messenger
 
-This is a dumb program that uses golang to fetch the quote of the day from `http://quote.rest/` and then uses twilio to send it to my phone.  The real value of it is that it's a simple thing that can be served up via k8s in a cronjob.
+This is a dumb program that uses golang to fetch the quote of the day from `http://quote.rest/` as well as some trivia from [API Ninjas](https://api-ninjas.com/api/trivia) and then uses twilio to send it to my phone.  The real value of it is that it's a simple thing that can be served up via k8s in a cronjob.
 
-Starting in v0.10, I added the [CatAPI](https://thecatapi.com/) as bonus picture inside the message. Starting in v1.0, I added the [Dog API](https://dog.ceo/dog-api/) to show on Fridays, as well as added support for way more cats via filetypes supported natively by Twilio. As of v2.0, I've integrated into the awesome service [ntfy.sh](https://ntfy.sh/) for quick notifications on my phone if there are any errors.
+Starting in v0.10, I added the [CatAPI](https://thecatapi.com/) as bonus picture inside the message. Starting in v1.0, I added the [Dog API](https://dog.ceo/dog-api/) to show on Fridays, as well as added support for way more cats via filetypes supported natively by Twilio. As of v2.0, I've integrated into the awesome service [ntfy.sh](https://ntfy.sh/) for quick notifications on my phone if there are any errors. As of v2.0.10, Trivia Tuesday is implemented.
 
 <img src="./imgs/example_message.jpeg" width="360" height="640" alt="Example Message"/>
 
@@ -11,8 +11,11 @@ Starting in v0.10, I added the [CatAPI](https://thecatapi.com/) as bonus picture
 1. Go v1.19+
 2. Working Kubernetes Cluster w/ the [SealedSecrets CRD](https://github.com/bitnami-labs/sealed-secrets) installed
 3. [Twilio Subscription and API Key](https://www.twilio.com/docs/usage/api)
-4. (optional) [ntfy.sh](https://ntfy.sh) for error reporting
-5. (optional) a prometheus pushgateway instance
+4. [Quote API Key](https://quotes.rest/)
+5. [Cat API Key](https://thecatapi.com/signup)
+6. [API Ninja Key](https://api-ninjas.com/api)
+7. (optional) [ntfy.sh](https://ntfy.sh) for error reporting
+8. (optional) a prometheus pushgateway instance
 
 ## Configuration
 
@@ -66,6 +69,8 @@ If you want to test locally with error reporting and prometheus metrics, it's a 
 TWILIO_AUTH=api-key \
   PHONE_NUMBERS=+16666666666 \
   CAT_API_KEY=api-key \
+  QUOTE_API_KEY=api-key \
+  API_NINJA_KEY=api-key \
   ERROR_REPORT_ENABLED=true \
   ERR_NOTIFICATION_TOPIC=your_topic \
   PUSH_TO_PROMETHEUS=true \
@@ -106,6 +111,8 @@ In order to replicate that, deploy an Ubunutu VM to GCP (or your cloud provider 
 
 - twilio API key
 - cat API key
+- Quote API Key
+- API Ninja Key
 - phone numbers to text
 - (OPTIONALLY) error reporting stuff
 - (OPTIONALLY) prometheus things
