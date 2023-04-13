@@ -180,6 +180,13 @@ func parseAnimalResponse(dogFriday bool, responseBody []byte) (string, error) {
 	return url, err
 }
 
+func BuildTwilioMessage(quotes *QuoteObject, dogFriday bool) string {
+	if dogFriday {
+		return fmt.Sprintf("🐕 It's Dog Friday! 🐕\n\n\"%v\"\n\n-%v", quotes.Quote, quotes.Author)
+	}
+	return fmt.Sprintf("\"%v\"\n\n-%v", quotes.Quote, quotes.Author)
+}
+
 // GetAnimalFromApi returns a URL with a random cat pic
 // It must be <5mb, and will retry 5 times to get a cat
 func GetAnimalFromApi(dogFriday bool) (string, error) {

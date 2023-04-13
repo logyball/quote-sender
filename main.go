@@ -89,7 +89,7 @@ func pushToPrometheus() {
 }
 
 func main() {
-	var quote *QuoteObject
+	var msg string
 	var err error
 	var animalUrl string
 	var numbersToText []string
@@ -100,17 +100,32 @@ func main() {
 	}
 
 	setLogLevel()
-	isItDogFridayBabeee := time.Now().Weekday().String() == "Friday"
+
+	t := time.Now().Weekday().String()
+	isItDogFridayBabeee := t == "Friday"
+	isItTriviaTuesday := t == "Tuesday"
 
 	eg := new(errgroup.Group)
 
-	eg.Go(func() error {
-		quote, err = GetQuote()
-		if err != nil {
-			errHandling(err, "Error getting quotes from the quote of the day API")
-		}
-		return err
-	})
+	if isItTriviaTuesday {
+		eg.Go(func() error {
+			trivia, err := GetTrivia()
+			if err != nil {
+				errHandling(err, "Error getting trivia from quote ninja")
+			}
+			msg = MakeTriviaTwilioMessage(trivia)
+			return err
+		})
+	} else {
+		eg.Go(func() error {
+			quote, err := GetQuote()
+			if err != nil {
+				errHandling(err, "Error getting quotes from the quote of the day API")
+			}
+			msg = BuildTwilioMessage(quote, isItDogFridayBabeee)
+			return err
+		})
+	}
 	eg.Go(func() error {
 		animalUrl, err = GetAnimalFromApi(isItDogFridayBabeee)
 		if err != nil {
@@ -135,7 +150,7 @@ func main() {
 		p := phoneNumber
 
 		eg.Go(func() error {
-			err := SendMessage(quote, animalUrl, isItDogFridayBabeee, p)
+			err := SendMessage(msg, animalUrl, isItDogFridayBabeee, p)
 			if err != nil {
 				errHandling(err, "Error sending messages w/ twilio")
 			}

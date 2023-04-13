@@ -22,6 +22,7 @@ deploy: remote
 		| sed "s/TWILIO_AUTH_VAR/${TWILIO_AUTH}/g" \
 		| sed "s/PHONE_NUMBERS_VAR/${PHONE_NUMBERS}/g" \
 		| sed "s/QUOTE_API_KEY_VAR/${QUOTE_API_KEY}/g" \
+		| sed "s/API_NINJA_KEY_VAR/${API_NINJA_KEY}/g" \
 		| sed "s/CAT_API_KEY_VAR/${CAT_API_KEY}/g" > ./vanilla_deploy/tmp/.env
 	cat ./vanilla_deploy/tmp/.env
 	

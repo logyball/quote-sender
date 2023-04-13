@@ -46,7 +46,7 @@ func getQuoteFromApi() (*QuoteObject, error) {
 	quoteApiKey := os.Getenv("QUOTE_API_KEY")
 	if quoteApiKey == "" {
 		log.Error("QUOTE_API_KEY not found in environment vars")
-		return nil, errors.New("CAT_API_KEY not found in environment vars")
+		return nil, errors.New("QUOTE_API_KEY not found in environment vars")
 	}
 
 	var bearer = "Bearer " + quoteApiKey
