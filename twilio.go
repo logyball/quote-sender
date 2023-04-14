@@ -66,7 +66,7 @@ func buildTextString(quotes *QuoteObject, dogFriday bool) string {
 	return fmt.Sprintf("\"%v\"\n\n-%v", quotes.Quote, quotes.Author)
 }
 
-func buildTwilioMsgData(msgString string, animalUrl string, dogFriday bool, numberTo string) *strings.Reader {
+func buildTwilioMsgData(msgString string, animalUrl string, numberTo string) *strings.Reader {
 	msgData := url.Values{}
 	msgData.Set("To", numberTo)
 	msgData.Set("From", TwilioNumberFrom)
@@ -75,15 +75,14 @@ func buildTwilioMsgData(msgString string, animalUrl string, dogFriday bool, numb
 	return strings.NewReader(msgData.Encode())
 }
 
-func buildTwilioPayload(msgString string, animalUrl string, dogFriday bool, numberTo string) (*http.Request, error) {
+func buildTwilioPayload(msgString string, animalUrl string, numberTo string) (*http.Request, error) {
 	log.WithFields(log.Fields{
-		"msg":       msgString,
-		"url":       animalUrl,
-		"dogFriday": dogFriday,
-		"numberTo":  numberTo,
+		"msg":      msgString,
+		"url":      animalUrl,
+		"numberTo": numberTo,
 	}).Debug("building twilio message")
 
-	msgDataReader := buildTwilioMsgData(msgString, animalUrl, dogFriday, numberTo)
+	msgDataReader := buildTwilioMsgData(msgString, animalUrl, numberTo)
 	req, err := http.NewRequest(http.MethodPost, TwilioUrl, msgDataReader)
 	if err != nil {
 		log.WithError(err).Error("error building post req for twilio")
@@ -102,10 +101,10 @@ func buildTwilioPayload(msgString string, animalUrl string, dogFriday bool, numb
 	return req, nil
 }
 
-func SendMessage(msgString string, animalUrl string, dogFriday bool, numberTo string) error {
+func SendMessage(msgString string, animalUrl string, numberTo string) error {
 	log.Debug("Sending message to twilio")
 
-	msgReq, err := buildTwilioPayload(msgString, animalUrl, dogFriday, numberTo)
+	msgReq, err := buildTwilioPayload(msgString, animalUrl, numberTo)
 	if err != nil {
 		return err
 	}

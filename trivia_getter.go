@@ -20,6 +20,51 @@ type TriviaObject struct {
 const triviaApiUrl string = "https://api.api-ninjas.com/v1/trivia"
 const triviaApiRetries int = 5
 
+func GetApiNinja(url string, retries int) ([]byte, error) {
+	log.Debugf("getting a request from %s", url)
+
+	apiNinjaKey := os.Getenv("API_NINJA_KEY")
+	if apiNinjaKey == "" {
+		log.Error("API_NINJA_KEY not found in environment vars")
+		return nil, errors.New("API_NINJA_KEY not found in environment vars")
+	}
+
+	var resp *http.Response
+	var body []byte
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.WithError(err).Error("Could not make req object")
+		return nil, err
+	}
+	req.Header.Add("X-Api-Key", apiNinjaKey)
+	client := &http.Client{}
+
+	for i := 0; i < retries; i++ {
+		resp, err = client.Do(req)
+		if err != nil {
+			log.WithError(err).Error("failed to HTTP get trivia")
+			continue
+		}
+		defer resp.Body.Close()
+
+		if !(resp.StatusCode < 300) {
+			log.Errorf("HTTP Status code check failed: %d", resp.StatusCode)
+			continue
+		}
+
+		body, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.WithError(err).Error("Error reading trivia api return into struct")
+			continue
+		}
+
+		return body, nil
+	}
+
+	return nil, fmt.Errorf("failed to find a response trivia object after %d tries", retries)
+}
+
 func parseTriviaJsonResponse(responseBody []byte) (*TriviaObject, error) {
 	log.Debug("parsing trivia res into json")
 	var val []TriviaObject
@@ -40,52 +85,17 @@ func parseTriviaJsonResponse(responseBody []byte) (*TriviaObject, error) {
 func getTriviaFromApi() (*TriviaObject, error) {
 	log.Debug("Grabbing trivia from api")
 
-	apiNinjaKey := os.Getenv("API_NINJA_KEY")
-	if apiNinjaKey == "" {
-		log.Error("API_NINJA_KEY not found in environment vars")
-		return nil, errors.New("API_NINJA_KEY not found in environment vars")
-	}
-
-	var resp *http.Response
-	var body []byte
-
-	req, err := http.NewRequest("GET", triviaApiUrl, nil)
+	body, err := GetApiNinja(triviaApiUrl, triviaApiRetries)
 	if err != nil {
-		log.WithError(err).Error("Could not make req object")
 		return nil, err
 	}
-	req.Header.Add("X-Api-Key", apiNinjaKey)
-	client := &http.Client{}
 
-	for i := 0; i < triviaApiRetries; i++ {
-		resp, err = client.Do(req)
-		if err != nil {
-			log.WithError(err).Error("failed to HTTP get trivia")
-			continue
-		}
-		defer resp.Body.Close()
-
-		if !(resp.StatusCode < 300) {
-			log.Errorf("HTTP Status code check failed: %d", resp.StatusCode)
-			continue
-		}
-
-		body, err = ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.WithError(err).Error("Error reading trivia api return into struct")
-			continue
-		}
-
-		triviaObj, err := parseTriviaJsonResponse(body)
-		if err != nil {
-			continue
-		}
-
-		log.Infof("Trivia object returned: %+v", triviaObj)
-		return triviaObj, nil
+	triviaObj, err := parseTriviaJsonResponse(body)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("failed to find a suitable trivia object after %d tries", triviaApiRetries)
+	return triviaObj, nil
 }
 
 func MakeTriviaTwilioMessage(trivia *TriviaObject) string {
