@@ -100,14 +100,13 @@ func main() {
 	}
 
 	setLogLevel()
-
-	t := time.Now().Weekday().String()
-	isItDogFridayBabeee := t == "Friday"
-	isItTriviaTuesday := t == "Tuesday"
-
 	eg := new(errgroup.Group)
 
-	if isItTriviaTuesday {
+	t := time.Now().Weekday().String()
+	var dogFriday bool
+
+	switch t {
+	case "Tuesday":
 		eg.Go(func() error {
 			trivia, err := GetTrivia()
 			if err != nil {
@@ -116,18 +115,39 @@ func main() {
 			msg = MakeTriviaTwilioMessage(trivia)
 			return err
 		})
-	} else {
+	case "Friday":
+		dogFriday = true
 		eg.Go(func() error {
 			quote, err := GetQuote()
 			if err != nil {
 				errHandling(err, "Error getting quotes from the quote of the day API")
 			}
-			msg = BuildTwilioMessage(quote, isItDogFridayBabeee)
+			msg = BuildTwilioMessage(quote, dogFriday)
+			return err
+		})
+	case "Saturday":
+		eg.Go(func() error {
+			fact, err := GetFact()
+			if err != nil {
+				errHandling(err, "Error getting facts from the fact of the day API")
+			}
+			msg, err = BuildFactTwilioMessage(fact)
+			return err
+		})
+	default:
+		dogFriday = false
+		eg.Go(func() error {
+			quote, err := GetQuote()
+			if err != nil {
+				errHandling(err, "Error getting quotes from the quote of the day API")
+			}
+			msg = BuildTwilioMessage(quote, dogFriday)
 			return err
 		})
 	}
+
 	eg.Go(func() error {
-		animalUrl, err = GetAnimalFromApi(isItDogFridayBabeee)
+		animalUrl, err = GetAnimalFromApi(dogFriday)
 		if err != nil {
 			errHandling(err, "Error getting animals from the cat/dog of the day API")
 		}
@@ -150,7 +170,7 @@ func main() {
 		p := phoneNumber
 
 		eg.Go(func() error {
-			err := SendMessage(msg, animalUrl, isItDogFridayBabeee, p)
+			err := SendMessage(msg, animalUrl, p)
 			if err != nil {
 				errHandling(err, "Error sending messages w/ twilio")
 			}
