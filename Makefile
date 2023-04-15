@@ -15,7 +15,7 @@ build:
 	mkdir -p ./dist
 	go build -o ./dist/quoteCats
 
-deploy: remote
+deploy:
 	mkdir -p ./vanilla_deploy/tmp
 
 	cat ./vanilla_deploy/env.template \
@@ -24,10 +24,14 @@ deploy: remote
 		| sed "s/QUOTE_API_KEY_VAR/${QUOTE_API_KEY}/g" \
 		| sed "s/API_NINJA_KEY_VAR/${API_NINJA_KEY}/g" \
 		| sed "s/CAT_API_KEY_VAR/${CAT_API_KEY}/g" > ./vanilla_deploy/tmp/.env
-	cat ./vanilla_deploy/tmp/.env
+
+	cat ./vanilla_deploy/loki-config.yaml.template \
+		| sed "s/GRAFANA_LOKI_API_KEY_VAR/${GRAFANA_LOKI_API_KEY}/g" > ./vanilla_deploy/tmp/promtail-config.yaml
 	
 	scp ./vanilla_deploy/startup.sh ${REMOTE_MACHINE_IP}:${USER_DIR}/startup.sh
 	scp ./vanilla_deploy/tmp/.env ${REMOTE_MACHINE_IP}:${USER_DIR}/.env
+	scp ./vanilla_deploy/tmp/promtail-config.yaml ${REMOTE_MACHINE_IP}:${USER_DIR}/promtail-config.yaml
+	scp ./vanilla_deploy/promtail.service ${REMOTE_MACHINE_IP}:${USER_DIR}/promtail.service
 
 	ssh ${REMOTE_MACHINE_IP} ${USER_DIR}/startup.sh
 
