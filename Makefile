@@ -38,7 +38,14 @@ deploy:
 	rm -rf ./vanilla_deploy/tmp
 
 remote:
-	sed -i '' 's/REMOTE_MACHINE_IP=.*/REMOTE_MACHINE_IP=$(shell gcloud compute instances describe "quote-sender" --billing-project="quote-sender-381016" --format="json" --zone="us-west1-a" | jq ".networkInterfaces[].accessConfigs[].natIP")/' .env
+	sed -i '' 's/REMOTE_MACHINE_IP=.*/REMOTE_MACHINE_IP=$(shell \
+		gcloud compute instances start "quote-sender" \
+			--zone="us-west1-a" \
+		&& gcloud compute instances describe "quote-sender" \
+			--billing-project="quote-sender-381016" \
+			--format="json" \
+			--zone="us-west1-a" \
+		| jq ".networkInterfaces[].accessConfigs[].natIP")/' .env
 
 ssh:
 	ssh $(shell gcloud compute instances describe 'quote-sender' --billing-project='quote-sender-381016' --format='json' --zone='us-west1-a' | jq '.networkInterfaces[].accessConfigs[].natIP')
